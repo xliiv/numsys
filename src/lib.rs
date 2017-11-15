@@ -12,10 +12,12 @@
 
 #[macro_use]
 extern crate lazy_static;
+extern crate failure;
+#[macro_use]
+extern crate failure_derive;
+
 
 use std::collections::HashMap;
-use std::error::Error as StdErr;
-use std::fmt;
 
 
 lazy_static! {
@@ -30,20 +32,6 @@ lazy_static! {
 }
 
 
-extern crate failure;
-#[macro_use] extern crate failure_derive;
-use failure::Error as FError;
-//#[derive(Debug, Fail)]
-//enum ToolchainError {
-//    #[fail(display = "invalid toolchain name: {}", name)]
-//    InvalidToolchainName {
-//        name: String,
-//    },
-//    #[fail(display = "unknown toolchain version: {}", version)]
-//    UnknownToolchainVersion {
-//        version: String,
-//    }
-//}
 #[derive(Debug, PartialEq, Fail)]
 pub enum NewError {
     #[fail(display = "{}", text)]
@@ -64,36 +52,6 @@ pub enum NewError {
     MissingChar {
         text: String,
     },
-}
-#[derive(Debug, PartialEq)]
-pub enum Error {
-    BaseTooSmall(String),
-    BaseTooBig(String),
-    DictEmpty,
-    MultipleChar(String),
-    MissingChar(String),
-}
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Error::BaseTooSmall(ref v) => write!(f, "BaseTooSmall: {}", v),
-            Error::BaseTooBig(ref v) => write!(f, "BaseTooBig: {}", v),
-            Error::DictEmpty => write!(f, "DictEmpty"),
-            Error::MultipleChar(ref v) => write!(f, "MultipleChar: {}", v),
-            Error::MissingChar(ref v) => write!(f, "MissingChar: {}", v),
-        }
-    }
-}
-impl StdErr for Error {
-    fn description(&self) -> &str {
-        match *self {
-            Error::BaseTooSmall(_) => "Base MUST be higher",
-            Error::BaseTooBig(_) => "Base MUST be smaller",
-            Error::DictEmpty => "Dict MUST include chars",
-            Error::MultipleChar(_) => "Dict values MUST be unique",
-            Error::MissingChar(_) => "All chars MUST be included",
-        }
-    }
 }
 
 
