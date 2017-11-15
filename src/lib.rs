@@ -69,7 +69,7 @@ pub enum NewError {
 /// use numsys::NewError;
 ///
 /// let msg = "Base MUST be 2 or higer, given 1".to_string();
-/// assert_eq!(switch_dec_base(10, 1), Err(NewError::BaseTooSmall{ text: msg}));
+/// assert_eq!(switch_dec_base(10, 1), Err(NewError::BaseTooSmall{ text: msg }));
 /// ```
 ///
 /// * Returns `NewError::BaseTooBig` when `base` is greater then 36
@@ -79,7 +79,7 @@ pub enum NewError {
 /// use numsys::NewError;
 ///
 /// let msg = "Base MUST be at most 36, given 37".to_string();
-/// assert_eq!(switch_dec_base(10, 37), Err(NewError::BaseTooBig{ text: msg}));
+/// assert_eq!(switch_dec_base(10, 37), Err(NewError::BaseTooBig{ text: msg }));
 /// ```
 pub fn switch_dec_base(decimal: usize, base: usize) -> Result<String, NewError> {
     if base < 2 {
@@ -140,7 +140,7 @@ pub fn switch_dec_base(decimal: usize, base: usize) -> Result<String, NewError> 
 /// use numsys::NewError;
 ///
 /// let detailed_msg = "Chars MUST be unique, duplicated: \'A\' in [\'A\', \'A\']".to_string();
-/// assert_eq!(seq2dec("1010", &['A', 'A']), Err(NewError::MultipleChar{text: detailed_msg}));
+/// assert_eq!(seq2dec("1010", &['A', 'A']), Err(NewError::MultipleChar{ text: detailed_msg }));
 /// ```
 ///
 /// * Returns `NewError::MissingChar` when `char2val` missing a char or more.
@@ -150,7 +150,7 @@ pub fn switch_dec_base(decimal: usize, base: usize) -> Result<String, NewError> 
 /// use numsys::NewError;
 ///
 /// let detailed_msg = "Char \'2\' not found in: [\'0\']".to_string();
-/// assert_eq!(seq2dec("20", &['0']), Err(NewError::MissingChar{text: detailed_msg}));
+/// assert_eq!(seq2dec("20", &['0']), Err(NewError::MissingChar{ text: detailed_msg }));
 /// ```
 ///
 pub fn seq2dec<S: AsRef<str>>(sequence: S, char2val: &[char]) -> Result<usize, NewError> {
