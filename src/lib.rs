@@ -10,11 +10,11 @@
 //!
 
 
-#[macro_use]
-extern crate lazy_static;
 extern crate failure;
 #[macro_use]
 extern crate failure_derive;
+#[macro_use]
+extern crate lazy_static;
 
 
 use std::collections::HashMap;
@@ -34,24 +34,11 @@ lazy_static! {
 
 #[derive(Debug, PartialEq, Fail)]
 pub enum NewError {
-    #[fail(display = "{}", text)]
-    BaseTooSmall {
-        text: String,
-    },
-    #[fail(display = "{}", text)]
-    BaseTooBig {
-        text: String,
-    },
-    #[fail(display = "DictEmpty")]
-    DictEmpty,
-    #[fail(display = "{}", text)]
-    MultipleChar {
-        text: String,
-    },
-    #[fail(display = "{}", text)]
-    MissingChar {
-        text: String,
-    },
+    #[fail(display = "{}", text)] BaseTooSmall { text: String },
+    #[fail(display = "{}", text)] BaseTooBig { text: String },
+    #[fail(display = "DictEmpty")] DictEmpty,
+    #[fail(display = "{}", text)] MultipleChar { text: String },
+    #[fail(display = "{}", text)] MissingChar { text: String },
 }
 
 
@@ -101,11 +88,9 @@ pub fn switch_dec_base(decimal: usize, base: usize) -> Result<String, NewError> 
         });
     };
     if base > *D_UAZ_LEN {
-        return Err(NewError::BaseTooBig{ text: format!(
-            "Base MUST be at most {}, given {}",
-            *D_UAZ_LEN,
-            base
-        )});
+        return Err(NewError::BaseTooBig {
+            text: format!("Base MUST be at most {}, given {}", *D_UAZ_LEN, base),
+        });
     };
     if decimal == 0 {
         return Ok("0".into());
@@ -189,7 +174,7 @@ pub fn seq2dec<S: AsRef<str>>(sequence: S, char2val: &[char]) -> Result<usize, N
                     elem,
                     char2val
                 );
-                return Err(NewError::MultipleChar{ text: msg });
+                return Err(NewError::MultipleChar { text: msg });
             }
         }
         hm
@@ -197,7 +182,9 @@ pub fn seq2dec<S: AsRef<str>>(sequence: S, char2val: &[char]) -> Result<usize, N
     let mut dec: usize = 0;
     for (idx, glyph) in sequence.as_ref().chars().rev().enumerate() {
         let value = _char2val.get(&glyph).ok_or_else(|| {
-            NewError::MissingChar{ text: format!("Char {:?} not found in: {:?}", glyph, char2val)}
+            NewError::MissingChar {
+                text: format!("Char {:?} not found in: {:?}", glyph, char2val),
+            }
         })?;
         dec += value * from_base.pow(idx as u32);
     }
@@ -269,6 +256,3 @@ mod tests {
         assert_eq!(seq2dec(seq, &dict), Ok(number));
     }
 }
-
-
-
