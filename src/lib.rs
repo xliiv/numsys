@@ -30,6 +30,41 @@ lazy_static! {
 }
 
 
+extern crate failure;
+#[macro_use] extern crate failure_derive;
+use failure::Error as FError;
+//#[derive(Debug, Fail)]
+//enum ToolchainError {
+//    #[fail(display = "invalid toolchain name: {}", name)]
+//    InvalidToolchainName {
+//        name: String,
+//    },
+//    #[fail(display = "unknown toolchain version: {}", version)]
+//    UnknownToolchainVersion {
+//        version: String,
+//    }
+//}
+#[derive(Debug, PartialEq, Fail)]
+pub enum NewError {
+    #[fail(display = "{}", text)]
+    BaseTooSmall {
+        text: String,
+    },
+    #[fail(display = "{}", text)]
+    BaseTooBig {
+        text: String,
+    },
+    #[fail(display = "DictEmpty")]
+    DictEmpty,
+    #[fail(display = "{}", text)]
+    MultipleChar {
+        text: String,
+    },
+    #[fail(display = "{}", text)]
+    MissingChar {
+        text: String,
+    },
+}
 #[derive(Debug, PartialEq)]
 pub enum Error {
     BaseTooSmall(String),
@@ -82,37 +117,37 @@ impl StdErr for Error {
 ///
 /// # Errors
 ///
-/// * Returns `Error::BaseTooSmall` when `base` is less then 2
+/// * Returns `NewError::BaseTooSmall` when `base` is less then 2
 ///
 /// ```
 /// use numsys::switch_dec_base;
-/// use numsys::Error;
+/// use numsys::NewError;
 ///
 /// let msg = "Base MUST be 2 or higer, given 1".to_string();
-/// assert_eq!(switch_dec_base(10, 1), Err(Error::BaseTooSmall(msg)));
+/// assert_eq!(switch_dec_base(10, 1), Err(NewError::BaseTooSmall{ text: msg}));
 /// ```
 ///
-/// * Returns `Error::BaseTooBig` when `base` is greater then 36
+/// * Returns `NewError::BaseTooBig` when `base` is greater then 36
 ///
 /// ```
 /// use numsys::switch_dec_base;
-/// use numsys::Error;
+/// use numsys::NewError;
 ///
 /// let msg = "Base MUST be at most 36, given 37".to_string();
-/// assert_eq!(switch_dec_base(10, 37), Err(Error::BaseTooBig(msg)));
+/// assert_eq!(switch_dec_base(10, 37), Err(NewError::BaseTooBig{ text: msg}));
 /// ```
-pub fn switch_dec_base(decimal: usize, base: usize) -> Result<String, Error> {
+pub fn switch_dec_base(decimal: usize, base: usize) -> Result<String, NewError> {
     if base < 2 {
-        return Err(Error::BaseTooSmall(
-            format!("Base MUST be 2 or higer, given {}", base),
-        ));
+        return Err(NewError::BaseTooSmall {
+            text: format!("Base MUST be 2 or higer, given {}", base),
+        });
     };
     if base > *D_UAZ_LEN {
-        return Err(Error::BaseTooBig(format!(
+        return Err(NewError::BaseTooBig{ text: format!(
             "Base MUST be at most {}, given {}",
             *D_UAZ_LEN,
             base
-        )));
+        )});
     };
     if decimal == 0 {
         return Ok("0".into());
@@ -146,39 +181,39 @@ pub fn switch_dec_base(decimal: usize, base: usize) -> Result<String, Error> {
 ///
 /// # Errors
 ///
-/// * Returns `Error::DictEmpty` when `char2val` length is 0.
+/// * Returns `NewError::DictEmpty` when `char2val` length is 0.
 ///
 /// ```
 /// use numsys::seq2dec;
-/// use numsys::Error;
+/// use numsys::NewError;
 ///
-/// assert_eq!(seq2dec("1010", &[]), Err(Error::DictEmpty));
+/// assert_eq!(seq2dec("1010", &[]), Err(NewError::DictEmpty));
 /// ```
 ///
-/// * Returns `Error::MultipleChar` when `char2val` includes duplicated chars.
+/// * Returns `NewError::MultipleChar` when `char2val` includes duplicated chars.
 ///
 /// ```
 /// use numsys::seq2dec;
-/// use numsys::Error;
+/// use numsys::NewError;
 ///
 /// let detailed_msg = "Chars MUST be unique, duplicated: \'A\' in [\'A\', \'A\']".to_string();
-/// assert_eq!(seq2dec("1010", &['A', 'A']), Err(Error::MultipleChar(detailed_msg)));
+/// assert_eq!(seq2dec("1010", &['A', 'A']), Err(NewError::MultipleChar{text: detailed_msg}));
 /// ```
 ///
-/// * Returns `Error::MissingChar` when `char2val` missing a char or more.
+/// * Returns `NewError::MissingChar` when `char2val` missing a char or more.
 ///
 /// ```
 /// use numsys::seq2dec;
-/// use numsys::Error;
+/// use numsys::NewError;
 ///
 /// let detailed_msg = "Char \'2\' not found in: [\'0\']".to_string();
-/// assert_eq!(seq2dec("20", &['0']), Err(Error::MissingChar(detailed_msg)));
+/// assert_eq!(seq2dec("20", &['0']), Err(NewError::MissingChar{text: detailed_msg}));
 /// ```
 ///
-pub fn seq2dec<S: AsRef<str>>(sequence: S, char2val: &[char]) -> Result<usize, Error> {
+pub fn seq2dec<S: AsRef<str>>(sequence: S, char2val: &[char]) -> Result<usize, NewError> {
     let from_base = char2val.len();
     if from_base == 0 {
-        return Err(Error::DictEmpty);
+        return Err(NewError::DictEmpty);
     }
     let single_char_sequence = {
         let uniques: HashMap<_, _> = sequence.as_ref().chars().map(|c| (c, 0)).collect();
@@ -196,7 +231,7 @@ pub fn seq2dec<S: AsRef<str>>(sequence: S, char2val: &[char]) -> Result<usize, E
                     elem,
                     char2val
                 );
-                return Err(Error::MultipleChar(msg));
+                return Err(NewError::MultipleChar{ text: msg });
             }
         }
         hm
@@ -204,7 +239,7 @@ pub fn seq2dec<S: AsRef<str>>(sequence: S, char2val: &[char]) -> Result<usize, E
     let mut dec: usize = 0;
     for (idx, glyph) in sequence.as_ref().chars().rev().enumerate() {
         let value = _char2val.get(&glyph).ok_or_else(|| {
-            Error::MissingChar(format!("Char {:?} not found in: {:?}", glyph, char2val))
+            NewError::MissingChar{ text: format!("Char {:?} not found in: {:?}", glyph, char2val)}
         })?;
         dec += value * from_base.pow(idx as u32);
     }
@@ -226,19 +261,19 @@ pub fn seq2dec<S: AsRef<str>>(sequence: S, char2val: &[char]) -> Result<usize, E
 ///
 /// # Errors
 ///
-/// * Returns `Error::DictEmpty` when `char2val` length is 0
+/// * Returns `NewError::DictEmpty` when `char2val` length is 0
 ///
 /// ```
 /// use numsys::dec2seq;
-/// use numsys::Error;
+/// use numsys::NewError;
 ///
-/// assert_eq!(dec2seq(10, &[]), Err(Error::DictEmpty));
+/// assert_eq!(dec2seq(10, &[]), Err(NewError::DictEmpty));
 /// ```
 ///
-pub fn dec2seq(mut decimal: usize, char2val: &[char]) -> Result<String, Error> {
+pub fn dec2seq(mut decimal: usize, char2val: &[char]) -> Result<String, NewError> {
     let base = char2val.len();
     if base == 0 {
-        return Err(Error::DictEmpty);
+        return Err(NewError::DictEmpty);
     }
     if base == 1 {
         return Ok(char2val[0].to_string().repeat(decimal));

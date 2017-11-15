@@ -5,3 +5,5 @@ authors = ["xliiv <tymoteusz.jankowski@gmail.com>"]
 
 [dependencies]
 lazy_static="0.2.9"
+failure = { git = "https://github.com/withoutboats/failure"}
+failure_derive = { git = "https://github.com/withoutboats/failure_derive" }
